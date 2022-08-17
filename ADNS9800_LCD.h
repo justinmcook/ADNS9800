@@ -59,7 +59,7 @@ void adns_ctrl::get_xy_dist(int16_t x_dist, int16_t y_dist)
     _x_dist = x_dist;
     _y_dist = y_dist;
     print_xy_dist_serial();
-    print_xy_dist_lcd();
+    //print_xy_dist_lcd();
 }
 
 void adns_ctrl::get_squal(uint16_t s)
@@ -180,8 +180,8 @@ void adns_ctrl::btnSELECT()
 void adns_ctrl::setup()
 {
     controller::setup();
-    _lcd.begin(16, 2);
-    _lcd.clear();
+    //_lcd.begin(16, 2);
+    //_lcd.clear();
 }
 
 void adns_ctrl::loop()

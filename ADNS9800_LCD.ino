@@ -6,12 +6,10 @@
 adns_ctrl ac;
 
 void setup() {
-    Serial.begin(9600);
+    Serial.begin(115200);
     ac.setup();
 }
 
 void loop() {
     ac.loop();
 }
-
-

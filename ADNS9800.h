@@ -1,7 +1,7 @@
 #include "ADNS9800_SROM_A4.h"
 
 extern const unsigned short firmware_length;
-extern prog_uchar firmware_data[];
+extern const unsigned char firmware_data[];
 
 namespace adns {
     // Registers
@@ -54,14 +54,15 @@ namespace adns {
 #define ENABLE_MOTION_BURST                      1
 
 // | ADNS-9800 | Arduino Uno Pins
-// | SS        | 3
-// | MO        | 11
-// | SC        | 13
-// | MI        | 12
-// | MOT       | 2 (attachInterrupt() at int.0 = pin 2; int.1 = pin 3)
-// | VI        |+5V (First You must Activate 5V Mode)
+// | SS        | 3 -> NCS
+// | MO        | 11 -> MOSI
+// | SC        | 13 -> SCLK
+// | MI        | 12 -> MISO
+// | MOT       | 2 (attachInterrupt() at int.0 = pin 2; int.1 = pin 3) -> Motion
+// | VI        |+5V (First You must Activate 5V Mode) -> VCC
 // | AG        | Gnd
 // | DG        | Gnd
+// Note that VDD2 is REFB which is the sensor pin 12 and is not connected externally
 
     class controller {
 public:
@@ -107,6 +108,7 @@ private:
         static int16_t convert_twos_compliment(byte l, byte h);
         static int16_t convert_twos_compliment(uint16_t u);
         static uint16_t join_byte(byte l, byte h);
+        static void perform_frame_capture();
     };
 
     const int _ncs = 3; // The SS pin
@@ -363,6 +365,79 @@ private:
         Serial.println("");
     }
 
+    void controller::perform_frame_capture() {
+        //com_end(); // ensure that the serial port is reset
+        //com_begin(); // ensure that the serial port is reset
+        //com_end(); // ensure that the serial port is reset
+
+        // Step 1: Reset the chip
+        //write_reg(REG_Power_Up_Reset, 0x5a); // force reset
+        //delay(50); // wait for it to reboot
+
+        // read registers 0x02 to 0x06 (and discard the data)
+        //read_reg(REG_Motion);
+        //read_reg(REG_Delta_X_L);
+        //read_reg(REG_Delta_X_H);
+        //read_reg(REG_Delta_Y_L);
+        //read_reg(REG_Delta_Y_H);
+        // upload the firmware
+        //upload_firmware();
+        //delay(10);
+        //enable laser(bit 0 = 0b), in normal mode (bits 3,2,1 = 000b)
+        // reading the actual value of the register is important because the real
+        // default value is different from what is said in the datasheet, and if you
+        // change the reserved bytes (like by writing 0x00...) it would not work.
+
+        // Step 2: Set the Forced_Disable bit to 0
+        //byte laser_ctrl0 = read_reg(REG_LASER_CTRL0);
+        //write_reg(REG_LASER_CTRL0, laser_ctrl0 & 0xf0 );
+
+        //delay(1);
+
+        // Step 3-4: Set the Frame_Capture register
+        write_reg(REG_Frame_Capture, 0x93);
+        write_reg(REG_Frame_Capture, 0xc5);
+
+        // Step 5: Wait for two frames
+        delay(20); // Assuming frame rate as low as 100fps as in the original code
+
+        // Get the frame pixels
+        int i = 0;
+        byte frame_pixels[900];
+        while(true){
+            // Step 6: If bit 0 of the motion reg is 1 then we can read the frame pixels
+            byte reg_motion = read_reg(REG_Motion);
+            //Serial.println(reg_motion);
+            if(reg_motion & (1<<0)){
+              Serial.println("");
+              Serial.println("=================================");
+              Serial.println("Detected motion with the motion register reading: " + String(reg_motion));
+              Serial.println("=================================");
+                // Step 7: Read from the pixel burst register 900 times to get the full frame
+                for(int j=0;j<900;j++){
+                    frame_pixels[j] = read_reg(REG_Pixel_Burst);
+                }
+                // Break the loop
+                break;
+            }
+            // Make sure we don't get stuck in an infinite loop
+            else if(++i==2000){
+                break;
+            }
+        }
+        Serial.println("");
+        Serial.println("=================================");
+        Serial.println("Finished getting a frame, took: " + String(i) + " iterations");
+        Serial.println("=================================");
+        for(int j=0;j<900;j++){
+            Serial.print(frame_pixels[j]);
+            Serial.print(", ");
+            if(!((j+1)%30)){
+                Serial.println("");
+            }
+        }
+    }
+
     void controller::setup() {
         pinMode (_ncs, OUTPUT);
 
@@ -384,18 +459,18 @@ private:
     }
 
     void controller::loop() {
-        if (! _moved) return;
-        if(_mot) {
-            clear();
-            get_squal(_squal);
-            get_xy(convert_twos_compliment(_ux), convert_twos_compliment(_uy));
-            get_xy_dist(convert_twos_compliment(_ux_dist), convert_twos_compliment(_uy_dist));
-            delay(3);
-        }
-        if (_fault) {
-            get_fault();
-        }
-        _moved = 0;
+//        if (! _moved) return;
+//        if(_mot) {
+//            clear();
+//            get_squal(_squal);
+//            get_xy(convert_twos_compliment(_ux), convert_twos_compliment(_uy));
+//            get_xy_dist(convert_twos_compliment(_ux_dist), convert_twos_compliment(_uy_dist));
+//            delay(3);
+//        }
+//        if (_fault) {
+//            get_fault();
+//        }
+//        _moved = 0;
+          perform_frame_capture();
     }
 };
-
