@@ -1,11 +1,11 @@
 ADNS9800_LCD
 ============
 
-Arduino Uno with ADNS-9800 and OSEPP LCD
+Updates to rpriyadarshi's code to make the code work with the latest version of the Arduino firmware (as of August 2022) as well as implementing the ability to capture frames.
 
-The project combines ADNS-9800 Optical sensor by John Kicklighter with OSEPP 16×2 LCD Display & Keypad Shield on an Arduino Uno. The code is modified from original to include Motion Burst and distance measurement. C++ namespace and 2 classes are introduced to better organize the code.
+Currently the code does not make use of the LCD features rpriyadarshi added but were left in place to be optionally used in the future. The code is also still a WIP so contains some commented functionality/old code.
 
-The chip-select pin (NCS) = 3
+To make the circuit easier to recreate, the ADNS9800 header file now include a modified with which pin shorthands corresponds to the datasheet names.
 
 References:
 ===========
@@ -13,4 +13,4 @@ https://www.kickstarter.com/projects/1034145369/high-speed-laser-optical-sensor
 https://github.com/mrjohnk/ADNS-9800
 https://www.tindie.com/products/jkicklighter/adns-9800-optical-laser-sensor/
 http://www.instructables.com/id/Arduino-Tutorial-ADNS-9800-Laser-Mouse-Traveled-Di/
-
+https://github.com/rpriyadarshi/ADNS9800_LCD
